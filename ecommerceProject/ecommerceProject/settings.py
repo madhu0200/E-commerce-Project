@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'UserManagement'
 ]
 
 MIDDLEWARE = [
@@ -74,8 +76,12 @@ WSGI_APPLICATION = 'ecommerceProject.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'ecommerce',       # Configured in Docker (POSTGRES_DB)
+        'USER': 'postgres',       # Configured in Docker (POSTGRES_USER)
+        'PASSWORD': 'password',   # Configured in Docker (POSTGRES_PASSWORD)
+        'HOST': 'localhost',
+        'PORT': '3000',               # Your mapped Docker port
     }
 }
 
@@ -120,3 +126,6 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Replace 'UserManagement' with your actual app name if lowercase in INSTALLED_APPS
+AUTH_USER_MODEL = 'UserManagement.Users'
