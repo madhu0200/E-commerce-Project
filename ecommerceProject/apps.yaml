@@ -1,0 +1,13 @@
+# Use postgres/example user/password credentials
+
+services:
+
+  db:
+    image: postgres
+
+
+    environment:
+      POSTGRES_PASSWORD: mysecretpassword
+
+    ports:
+      - 3000:5432
