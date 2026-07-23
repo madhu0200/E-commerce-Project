@@ -1,7 +1,7 @@
-from .serializers import UserSerializer
+
 from .tokens import account_activation_token
 from rest_framework_simplejwt.views import TokenObtainPairView
-from .serializers import CustomTokenObtainPairSerializer
+from .serializers import *
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
@@ -10,6 +10,8 @@ from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+
 
 from .models import Users
 from .serializers import RequestPasswordResetSerializer, ResetPasswordConfirmSerializer
@@ -177,3 +179,27 @@ class ResetPasswordConfirmView(APIView):
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]  # Ensures user MUST be logged in
+
+    def post(self, request):
+        serializer = ChangePasswordSerializer(
+            data=request.data,
+            context={'request': request}
+        )
+        if serializer.is_valid():
+            user = request.user
+            user.set_password(serializer.validated_data['new_password'])
+            user.save()
+            return Response(
+                {"msg": "Password updated successfully!"},
+                status=status.HTTP_200_OK
+            )
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
