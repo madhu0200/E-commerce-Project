@@ -27,6 +27,12 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+# Print emails to terminal during development
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Front-end or API base URL for constructing verification links
+FRONTEND_URL = 'http://127.0.0.1:8000'
+
 
 # Application definition
 
@@ -130,3 +136,22 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Replace 'UserManagement' with your actual app name if lowercase in INSTALLED_APPS
 AUTH_USER_MODEL = 'UserManagement.Users'
+
+
+from datetime import timedelta
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+}
