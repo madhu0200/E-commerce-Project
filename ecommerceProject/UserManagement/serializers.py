@@ -1,6 +1,9 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from .models import *
+from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework.exceptions import AuthenticationFailed
 
 User = get_user_model()
 
@@ -21,7 +24,8 @@ class UserSerializer(serializers.ModelSerializer):
             'is_verified',
             'created_at',
             'updated_at',
-            'password'
+            'password',
+            'role'
         ]
         read_only_fields = ['id', 'is_verified', 'created_at', 'updated_at']
         extra_kwargs = {
@@ -82,3 +86,56 @@ class SellerAddressSerializer(serializers.ModelSerializer):
             'is_primary'
         ]
         read_only_fields = ['id']
+
+
+
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        # Authenticate email & password with base SimpleJWT method
+        data = super().validate(attrs)
+
+        # Security Check: Block login if user is not email-verified
+        if not self.user.is_verified:
+            raise AuthenticationFailed(
+                {"error": "Your email is not verified. Please verify your email before logging in."}
+            )
+
+        # Security Check: Block login if user account is deactivated
+        if not self.user.is_active:
+            raise AuthenticationFailed(
+                {"error": "Your account has been deactivated. Please contact support."}
+            )
+
+        # Add custom fields to the JSON response
+
+        data['email'] = self.user.email
+        data['username'] = self.user.username
+        data['role'] = self.user.role
+
+
+        return data
+
+
+
+User = get_user_model()
+
+
+class RequestPasswordResetSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("No registered user found with this email address.")
+        return value
+
+
+class ResetPasswordConfirmSerializer(serializers.Serializer):
+    uidb64 = serializers.CharField(write_only=True)
+    token = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(min_length=8, write_only=True)
+
+    def validate_new_password(self, value):
+        # Add extra complexity checks if needed
+        return value
