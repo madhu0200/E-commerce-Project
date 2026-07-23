@@ -28,7 +28,13 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 # Print emails to terminal during development
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'djangoProjects9@gmail.com'      # Your actual sending Gmail
+EMAIL_HOST_PASSWORD = 'siaa akmz tdpu dzhz'     # Gmail App Password (NOT your normal password)
+DEFAULT_FROM_EMAIL = 'Ecommerce App <djangoProjects9@gmail.com>'
 
 # Front-end or API base URL for constructing verification links
 FRONTEND_URL = 'http://127.0.0.1:8000'
@@ -84,9 +90,9 @@ WSGI_APPLICATION = 'ecommerceProject.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'ecommerce',       # Configured in Docker (POSTGRES_DB)
+        'NAME': 'ecommerce_db',       # Configured in Docker (POSTGRES_DB)
         'USER': 'postgres',       # Configured in Docker (POSTGRES_USER)
-        'PASSWORD': 'password',   # Configured in Docker (POSTGRES_PASSWORD)
+        'PASSWORD': 'mysecretpassword',   # Configured in Docker (POSTGRES_PASSWORD)
         'HOST': 'localhost',
         'PORT': '3000',               # Your mapped Docker port
     }

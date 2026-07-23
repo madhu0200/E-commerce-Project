@@ -1,4 +1,6 @@
+from django.core.mail import send_mail
 from django.shortcuts import render
+from django.utils.encoding import force_bytes, force_str
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.status import *
@@ -17,6 +19,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .serializers import UserSerializer
 from .models import Users
+from .tokens import account_activation_token
 
 
 class Register(APIView):
@@ -41,7 +44,7 @@ class Register(APIView):
             token = account_activation_token.make_token(user)
 
             # Build verification URL
-            verification_link = f"{settings.FRONTEND_URL}/api/auth/verify-email/{uid}/{token}/"
+            verification_link = f"{settings.FRONTEND_URL}/users/auth/verify-email/{uid}/{token}/"
 
             # Send Email
             subject = "Verify Your Email Address"
@@ -62,3 +65,33 @@ class Register(APIView):
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class VerifyEmailView(APIView):
+    def get(self, request, uidb64, token):
+        try:
+            # Decode the user ID
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = Users.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, Users.DoesNotExist):
+            user = None
+
+        if user is not None and account_activation_token.check_token(user, token):
+            if user.is_verified:
+                return Response(
+                    {"msg": "Email is already verified."},
+                    status=status.HTTP_200_OK
+                )
+
+            # Mark account as verified
+            user.is_verified = True
+            user.save()
+            return Response(
+                {"msg": "Email verified successfully! You can now log in."},
+                status=status.HTTP_200_OK
+            )
+        else:
+            return Response(
+                {"error": "Verification link is invalid or has expired."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
