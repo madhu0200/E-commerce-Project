@@ -1,13 +1,74 @@
+version: '3.8'
+
 services:
+  # 1. PostgreSQL Database
   db:
-    image: postgres:15-alpine # Pinning a stable version tag is best practice
+    image: postgres:15-alpine
     container_name: ecommerce-postgres-db
     restart: always
     environment:
       POSTGRES_DB: ecommerce_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: mysecretpassword
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # 2. Redis Message Broker for Celery
+  redis:
+    image: redis:7-alpine
+    container_name: ecommerce-redis
+    restart: always
+
+  # 3. Django Web Application (WSGI via Gunicorn)
+  web:
+    build: .
+    container_name: ecommerce-django-web
+    command: gunicorn your_project_name.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+    environment:
+      - POSTGRES_DB=ecommerce_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=mysecretpassword
+      - DB_HOST=db
+      - DB_PORT=5432
+      - CELERY_BROKER=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+
+  # 4. Celery Worker (Executes Background Tasks)
+  celery:
+    build: .
+    container_name: ecommerce-celery-worker
+    command: celery -A your_project_name worker --loglevel=info
+    volumes:
+      - .:/app
+    environment:
+      - POSTGRES_DB=ecommerce_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=mysecretpassword
+      - DB_HOST=db
+      - DB_PORT=5432
+      - CELERY_BROKER=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+
+  # 5. Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: ecommerce-nginx
+    restart: always
     ports:
-      - "3000:5432"
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - static_volume:/app/staticfiles
+    depends_on:
+      - web
 
-
+volumes:
+  postgres_data:
+  static_volume:

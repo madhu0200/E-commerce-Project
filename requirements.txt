@@ -1,5 +1,0 @@
-django
-djangorestframework
-uuid
-psycopg2-binary
-djangorestframework-simplejwt

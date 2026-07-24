@@ -17,4 +17,7 @@ urlpatterns = [
  path('auth/reset-password-confirm/', ResetPasswordConfirmView.as_view(), name='password_reset_confirm'),
 
  path('auth/change-password/', ChangePasswordView.as_view(), name='change_password'),
+
+ path('addresses/me/', UserAddressesView.as_view(), name='user_addresses'),
+ path('addresses/<uuid:pk>/', UserAddressDetailView.as_view(), name='user_address_detail'),
 ]
